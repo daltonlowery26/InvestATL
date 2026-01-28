@@ -10,15 +10,14 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline, BitsAndB
 from sentence_transformers import SentenceTransformer
 from langchain_huggingface import HuggingFacePipeline
 from langchain_core.prompts import PromptTemplate
-from sklearn.neighbors import NearestNeighbors
 os.chdir('C:/Users/dalto/OneDrive/Pictures/Documents/Emory/InvestATL/data')
 dotenv.load_dotenv()
 
 # %% load model and create pipeline
-checkpoint = "Qwen3-VL-8B-Instruct-FP8"
+checkpoint = model_name = "Qwen/Qwen3-8B"
 quantization_config = BitsAndBytesConfig(
     load_in_4bit=True,
-    bnb_4bit_quant_type="nf4",  # nfp4 to reduce memory furtprint
+    bnb_4bit_quant_type="nf4",  # nfp4 to reduce memory footprint
     bnb_4bit_compute_dtype=torch.float16,  # compte in fp16
     bnb_4bit_use_double_quant=True,
 )
@@ -111,36 +110,20 @@ def get_answer(user_question):
     
     census_data = json.dumps(census_data)
     print(census_data)
-    census_data = matched_search + ": " + census_data
+    census_data = matched_search + "in GA : " + census_data
     # generate data
     template = """
     ### Instructions
         1. **Source Material Only**: Use ONLY the provided "Data" and "Census" text to answer. Do not use outside knowledge.
         2. **"I dont know" Rule**: If the answer is not explicitly in the Data or Census, or if the data is missing, output exactly "idk".
         3. **No Interpretation**: Do not infer information. If the specific value is not written, it does not exist.
-        4. **No CODE**: Do not return code just answers
+        4. "Keep answers concise as possible"
         
-        ### Examples
-        
-        Data: [AMOUNT OF DOGS: 1]
-        Census: []
-        Question: How many dogs are there?
-        Answer: 1
-        
-        Data: [HOUSE ON LAND: True, True, False, True, Valid]
-        Census: []
-        Question: How many houses?
-        Answer: 4
-        
-        Data: [DOGS: 3 6]
-        Census: [POPULATION IN FAMILIES BY AGE (PURPLE ALONE HOUSEHOLDER): [["PH4D_COL1_R2", "state"], ["113862", "13"]]]
-        Question: How many people purple people in GA?
-        Answer: 1113862
-        
-        Data: [Inventory: Apples, Oranges]
-        Census: []
-        Question: What is the price of Bananas?
-        Answer: I dont know
+        ### Example 1:
+        Data: Johsn creek Population: [3030]
+        Census: GA_population_inCity: [303002]
+        Question: How many people in johns creek
+        Answer: 3030
         
         ### Current Task
         Data: {context_data}
@@ -155,5 +138,5 @@ def get_answer(user_question):
     return response
 
 # %% questions answer
-response = get_answer("how many people in healthcare")
+response = get_answer("population of GA")
 print(response)
